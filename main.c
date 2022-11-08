@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
   bool next, last, exit;
   char *line = NULL;
   unsigned char *buffer = NULL;
-  size_t i, buffercount, linlen, linesize;
+  size_t i, buffercount, linlen, linesize, bytes_printed, offset_indent_rem;
   arguments *arg = NULL;
 
 
@@ -132,6 +132,7 @@ int main(int argc, char *argv[])
 
   last = false;
   linlen = 0;
+  bytes_printed = 0;
   while(1)
   {
     next = false;
@@ -183,11 +184,19 @@ int main(int argc, char *argv[])
       }
     }
 
+    offset_indent_rem = printf("%lx-%lx", bytes_printed, bytes_printed+arg->column-1);
+    offset_indent_rem = 20 - offset_indent_rem;
+    for(i=0; i<offset_indent_rem; i++) printf(" ");
+
     for(i=0; i<arg->column; i++) fprintf(stdout, "%02x ", buffer[i]);
     fprintf(stdout, "\n");
 
-    for(i=0; i<arg->column; i++) fprintf(stdout, " %c ", (buffer[i]>=32 && buffer[i]<=126)?buffer[i]:'.');
+    printf("                    ");
+
+    for(i=0; i<arg->column; i++) fprintf(stdout, " %c ", (buffer[i]>=32 && buffer[i]<=126)?buffer[i]:' ');
     fprintf(stdout, "\n");
+
+    bytes_printed += arg->column;
 
     if(last) break;
   }
