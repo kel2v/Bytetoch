@@ -1,210 +1,80 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdbool.h>
-#include <errno.h>
-#include <unistd.h>
-
-typedef struct arguments
-{
-  FILE *source;
-  size_t column;
-} arguments;
-
-bool isOnlyNumeral(char *str)
-{
-  size_t length = strlen(str), i;
-
-  for(i=0; i<length ; i++)
-  {
-    if(!(str[i] >= 48 && str[i]<=57)) return false;
-  }
-
-  return true;
-}
-
-arguments *validateArg(int argc, char *argv[], size_t column)
-{
-  arguments *arg;
-  arg = malloc(sizeof(arguments));
-  if(arg == NULL)
-  {
-    fprintf(stderr, "fatal error : arg -> %s\n", strerror(errno));
-    return NULL;
-  }
-
-  if(argc == 1)
-  {
-    fprintf(stderr, "fatal error : too few arguments\n");
-    free(arg);
-    return NULL;
-  }
-  else if(argc == 2)
-  {
-    if(access(argv[1], F_OK) == -1)
-    {
-      fprintf(stderr, "fatal error : %s -> %s\n", argv[1], strerror(errno));
-      free(arg);
-      return NULL;
-    }
-    else
-    {
-      arg->source = fopen(argv[1], "rb");
-      if(arg->source == NULL)
-      {
-        fprintf(stderr, "fatal error : %s -> %s\n", argv[1], strerror(errno));
-        free(arg);
-        return NULL;
-      }
-      arg->column = column;
-    }
-  }
-  else if(argc == 3)
-  {
-    if(access(argv[2], F_OK) == -1)
-    {
-      fprintf(stderr, "fatal error : %s -> %s\n", argv[1], strerror(errno));
-      free(arg);
-      return NULL;
-    }
-    else
-    {
-      arg->source = fopen(argv[2], "rb");
-      if(arg->source == NULL)
-      {
-        fprintf(stderr, "fatal error : %s -> %s\n", argv[1], strerror(errno));
-        free(arg);
-        return NULL;
-      }
-
-      if(!isOnlyNumeral(argv[1]))
-      {
-        fprintf(stderr, "error : argument 1 is not an integer; using default value\n");
-        arg->column = column;
-      }
-      else arg->column = (size_t) atoi(argv[1]);
-    }
-  }
-  else
-  {
-    fprintf(stderr, "fatal error : too many arguments\n");
-    free(arg);
-    return NULL;
-  }
-
-  return arg;
-}
+#include "main.h"
 
 int main(int argc, char *argv[])
 {
-  bool next, last, exit;
-  char *line = NULL;
+  char *choiceStr = NULL;
   unsigned char *buffer = NULL;
-  size_t i, buffercount, linlen, linesize, bytes_printed, offset_indent_rem;
+  int next, last, exit;
+  size_t i, buffercount, choiceCount, choiceStrBufferLength, bytes_printed, offset_indent_rem;
   arguments *arg = NULL;
 
+  arg = validateArguments(argc, argv, 16);
+  if(arg == NULL) return EXIT_FAILURE;
 
-  line = malloc(1);
-  if(line == NULL)
-  {
-    fprintf(stderr, "fatal error : line -> %s", strerror(errno));
-    return EXIT_FAILURE;
-  }
-
-  arg = validateArg(argc, argv, 16);
-  if(arg == NULL)
-  {
-    free(line);
-    return EXIT_FAILURE;
-  }
-
-  printf("column %lu\n", arg->column);
-
+  next = 0;
+  last = 0;
+  exit = 0;
   buffer = malloc(arg->column+1);
   if(buffer == NULL)
   {
-    fprintf(stderr, "fatal error : buffer -> %s\n", strerror(errno));
-    free(line);
+    fprintf(stderr, "error : buffer -> %s\n", strerror(errno));
     fclose(arg->source);
-    free(arg);
+    freePtrs(1, (void *)arg);
     return EXIT_FAILURE;
   }
-
-  last = false;
-  linlen = 0;
+  choiceStrBufferLength = 0;
   bytes_printed = 0;
+
   while(1)
   {
-    next = false;
+    next = 0;
 
-  	linesize = getline(&line, &linlen, stdin);
-    if(linesize == -1)
+  	choiceCount = getline(&choiceStr, &choiceStrBufferLength, stdin);
+    if(choiceCount == -1)
     {
-      fprintf(stderr, "fatal error : linesize -> %s\n", strerror(errno));
-      free(line);
+      fprintf(stderr, "error : choiceCount -> %s\n", strerror(errno));
       fclose(arg->source);
-      free(arg);
-      free(buffer);
+      freePtrs(3, (void *)choiceStr, (void *)arg, (void *)buffer);
+      return EXIT_FAILURE;
+    }
+    else if(choiceCount == 2)
+    {
+      if(choiceStr[0] == 'q' || choiceStr[0] == 'Q') exit = 1;
+    }
+    else if(choiceCount > 2) next = 1;
+
+    if(exit) break;
+    if(next) continue;
+
+    buffercount = fread(buffer, 1, arg->column, arg->source);
+    if(feof(arg->source) != 0)
+    {
+      arg->column = buffercount;
+      last = 1;
+    }
+    if(ferror(arg->source) != 0)
+    {
+      fprintf(stderr, "error : fread -> %s\n", strerror(errno));
+      fclose(arg->source);
+      freePtrs(3, (void *)choiceStr, (void *)arg, (void *)buffer);
       return EXIT_FAILURE;
     }
 
-    if(linesize > 1)
-    {
-      for(i=0; i<linesize-1; i++)
-      {
-        if(line[i] == 'q' || line[i] == 'Q')
-        {
-          exit = true;
-          break;
-        }
-      }
-
-      next = true;
-    }
-
-    if(exit) break;
-    else if(next) continue;
-
-    buffercount = fread(buffer, sizeof(char), arg->column, arg->source);
-    if(buffercount == 0)
-    {
-      if(feof(stdin) != 0)
-      {
-        arg->column = buffercount;
-        last = true;
-      }
-      else
-      {
-        fprintf(stderr, "fatal error : fread -> %s\n", strerror(errno));
-        free(line);
-        fclose(arg->source);
-        free(arg);
-        free(buffer);
-        return EXIT_FAILURE;
-      }
-    }
-
-    offset_indent_rem = printf("%lx-%lx", bytes_printed, bytes_printed+arg->column-1);
+    offset_indent_rem = fprintf(stdout, "%lx-%lx", bytes_printed, bytes_printed+arg->column-1);
     offset_indent_rem = 20 - offset_indent_rem;
-    for(i=0; i<offset_indent_rem; i++) printf(" ");
-
+    for(i=0; i<offset_indent_rem; i++) fprintf(stdout, " ");
     for(i=0; i<arg->column; i++) fprintf(stdout, "%02x ", buffer[i]);
     fprintf(stdout, "\n");
-
-    printf("                    ");
-
+    fprintf(stdout, "                    ");
     for(i=0; i<arg->column; i++) fprintf(stdout, " %c ", (buffer[i]>=32 && buffer[i]<=126)?buffer[i]:' ');
     fprintf(stdout, "\n");
 
     bytes_printed += arg->column;
-
     if(last) break;
   }
 
-  free(line);
   fclose(arg->source);
-  free(arg);
-  free(buffer);
+  freePtrs(3, (void *)choiceStr, (void *)arg, (void *)buffer);
 
   return EXIT_SUCCESS;
 }
