@@ -1,20 +1,24 @@
 #ifndef _TOOLS_H_
 #define _TOOLS_H_
 
-#define DEFAULT_COLUMN_WIDTH 16
+#include <stdio.h>
+
 #define MIN_COLUMN_WIDTH 1
 #define MAX_COLUMN_WIDTH 64
+#define DEFAULT_COLUMN_WIDTH 16
 #define MAX_OFFSET_SPACE_WIDTH 20
+#define MAX_CHOICESTR_BUFFER_LENGTH 1024
 
-typedef struct arguments arguments;
-typedef unsigned char buffer;
+struct arguments
+{
+  FILE *src;
+  int column_width;
+};
 
-arguments *initArguments(int argc, char *argv[]);
-buffer *allocateBuffer(arguments *arg);
+struct arguments *initArguments(int argc, char *argv[]);
 int choice(char **choiceStr, size_t *choiceStrBufferLength);
-int loadBuffer(buffer *buf, arguments *arg);
-void printOutput(buffer *buf, arguments *arg, size_t *bytes_printed);
-void freeArguments(arguments *arg);
-void freeBuffer(buffer *buf);
+int loadBuffer(unsigned char *buf, struct arguments *arg);
+void printOutput(unsigned char *buf, struct arguments *arg, size_t *bytes_printed);
+void freeArguments(struct arguments *arg);
 
 #endif

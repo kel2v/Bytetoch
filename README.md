@@ -38,3 +38,33 @@ When the program is executed by calling it from a shell, optionally with column-
       * If EOF is set ON, then a `last` flag is set 1 to **break** the loop at the end of the current iteration.
       * If an error occurs while `fread`ing, the process is terminated with EXIT_FAILURE.
     3. Prints the output; the offset, the indenting, the hexadecimal and ASCII representation of the **column-witdh** number of bytes.
+
+
+    /*
+     * prototype:
+     * arguments *initArguments(int argc, char *argv[]);
+     *
+     * Description:
+     * Allocates and initializes an object of type 'arguments' and returns its address.
+     * The memory allocated should be freed by the function 'freeArguments'
+     *
+     * Return value:
+     * On success, returns the address of the object.
+     * On failure, returns NULL.
+     *
+     * Error:
+     * If error occurs, prints the error message in STDERR stream. Occurence of error doesn't necessarily causes function to return NULL.
+     */
+
+     /*
+      * Prototype:
+      * int choice(char **choiceStr, size_t *choiceStrBufferLength);
+      *
+      * Description:
+      * Processes user's choice-input string and returns appropriate choice number.
+      *
+      * Return value:
+      * if error occurs, returns -1.
+      * else if strcmp(choiceStr, "\n") == 0
+      * return 1 if strcmp(choiceStr, "q\n") == 0 or strcmp(choiceStr, "Q\n") == 0
+      */

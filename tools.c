@@ -6,12 +6,6 @@
 #include <stdarg.h>
 #include "tools.h"
 
-struct arguments
-{
-  FILE *src;
-  int column_width;
-};
-
 
 FILE *init_src(int argc, char *argv[])
 {
@@ -34,13 +28,20 @@ size_t init_column_width(int argc, char *argv[])
     column_width = strtol(argv[1], &endptr, 10);
     if( (*argv[1] == '\0' || *endptr != '\0') || (column_width < MIN_COLUMN_WIDTH || column_width > MAX_COLUMN_WIDTH) )
     {
-      fprintf(stderr, "error: column_width modifier - invalid input; Using default value: %hu\n", DEFAULT_COLUMN_WIDTH);
       column_width = DEFAULT_COLUMN_WIDTH;
     }
   }
   return column_width;
 }
 
+void freeArguments(struct arguments *arg)
+{
+  if(arg != NULL)
+  {
+    if(arg->src != NULL) fclose(arg->src);
+    free(arg);
+  }
+}
 
 struct arguments *initArguments(int argc, char *argv[])
 {
@@ -48,20 +49,14 @@ struct arguments *initArguments(int argc, char *argv[])
 
   if(argc <= 1 || argc > 3)
   {
-    fprintf(stderr, "error: arguments - invalid number of arguments\n");
     return NULL;
   }
 
-  arg = malloc(sizeof(struct arguments));
-  if(arg == NULL)
-  {
-    fprintf(stderr, "error: malloc - %s\n", strerror(errno));
-    return NULL;
-  }
+  if( (arg = malloc(sizeof(struct arguments))) == NULL ) return NULL;
 
   if((arg->src = init_src(argc, argv)) == NULL)
   {
-    fprintf(stderr, "error: binary source - %s\n", strerror(errno));
+    free(arg);
     return NULL;
   }
   arg->column_width = init_column_width(argc, argv);
@@ -70,34 +65,19 @@ struct arguments *initArguments(int argc, char *argv[])
 }
 
 
-unsigned char *allocateBuffer(struct arguments *arg)
-{
-  unsigned char *buffer;
-  buffer = malloc(arg->column_width+1);
-  if(buffer == NULL)
-  {
-    fprintf(stderr, "error: allocateBuffer -> %s\n", strerror(errno));
-    fclose(arg->src);
-    return NULL;
-  }
-  return buffer;
-}
 
 int choice(char **choiceStr, size_t *choiceStrBufferLength)
 {
   ssize_t readCount;
-  readCount = getline(choiceStr, choiceStrBufferLength, stdin);
 
+  readCount = getline(choiceStr, choiceStrBufferLength, stdin);
   if(readCount == -1) return -1;
   else if(readCount == 1) return 0;
-  else if(readCount == 2)
-  {
-    if(*choiceStr[0] == 'q' || *choiceStr[0] == 'Q') return 1;
-  }
+  else if(readCount == 2) if(*choiceStr[0] == 'q' || *choiceStr[0] == 'Q') return 1;
   else return 2;
 }
 
-int loadBuffer(buffer *buf, arguments *arg)
+int loadBuffer(unsigned char *buf, struct arguments *arg)
 {
   size_t buffercount;
 
@@ -115,7 +95,7 @@ int loadBuffer(buffer *buf, arguments *arg)
   return 0;
 }
 
-void printOutput(buffer *buf, arguments *arg, size_t *bytes_printed)
+void printOutput(unsigned char *buf, struct arguments *arg, size_t *bytes_printed)
 {
   size_t remaining_indent, i;
 
@@ -132,18 +112,4 @@ void printOutput(buffer *buf, arguments *arg, size_t *bytes_printed)
   fprintf(stdout, "\n");
 
   *bytes_printed += arg->column_width;
-}
-
-void freeArguments(arguments *arg)
-{
-  if(arg != NULL)
-  {
-    if(arg->src != NULL) fclose(arg->src);
-    free(arg);
-  }
-}
-
-void freeBuffer(buffer *buf)
-{
-  free(buf);
 }
