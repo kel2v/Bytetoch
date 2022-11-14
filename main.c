@@ -10,14 +10,13 @@ int main(int argc, char *argv[])
   unsigned char *buf;
   char *choiceStr = NULL;
   int choiceValue, bufferStatus, more = 1;
+  long current_pos, offset;
   size_t bytes_printed = 0, choiceStrBufferLength = MAX_CHOICESTR_BUFFER_LENGTH;
-
 
   if((arg = initArguments(argc, argv)) == NULL)
   {
     return EXIT_FAILURE;
   }
-
 
   if( ((buf = malloc(arg->column_width+1)) == NULL) && ((choiceStr = malloc(choiceStrBufferLength)) == NULL) )
   {
@@ -27,7 +26,7 @@ int main(int argc, char *argv[])
 
   while(more)
   {
-  	choiceValue = choice(&choiceStr, &choiceStrBufferLength);
+  	choiceValue = choice(&choiceStr, &choiceStrBufferLength, &offset);
     if(choiceValue == -1)
     {
       freeArguments(arg);
@@ -39,6 +38,17 @@ int main(int argc, char *argv[])
       break;
     }
     else if(choiceValue == 2)
+    {
+      current_pos = ftell(arg->src);
+      bytes_printed = offset - offset%arg->column_width;
+      if( (fseek(arg->src, offset, SEEK_SET) == -1) || (ftell(arg->src) >= arg->filesize) )
+      {
+        fseek(arg->src, current_pos, SEEK_SET);
+        bytes_printed = current_pos;
+        continue;
+      }
+    }
+    else if(choiceValue == 3)
     {
       continue;
     }

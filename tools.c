@@ -34,6 +34,13 @@ size_t init_column_width(int argc, char *argv[])
   return column_width;
 }
 
+void init_filesize(struct arguments *arg)
+{
+  fseek(arg->src, 0, SEEK_END);
+  arg->filesize = ftell(arg->src);
+  fseek(arg->src, 0, SEEK_SET);
+}
+
 void freeArguments(struct arguments *arg)
 {
   if(arg != NULL)
@@ -60,21 +67,37 @@ struct arguments *initArguments(int argc, char *argv[])
     return NULL;
   }
   arg->column_width = init_column_width(argc, argv);
+  init_filesize(arg);
 
   return arg;
 }
 
 
 
-int choice(char **choiceStr, size_t *choiceStrBufferLength)
+int choice(char **choiceStr, size_t *choiceStrBufferLength, long *offset)
 {
   ssize_t readCount;
+  char *endptr = NULL;
 
   readCount = getline(choiceStr, choiceStrBufferLength, stdin);
-  if(readCount == -1) return -1;
-  else if(readCount == 1) return 0;
-  else if(readCount == 2) if(*choiceStr[0] == 'q' || *choiceStr[0] == 'Q') return 1;
-  else return 2;
+  if(readCount == -1)
+  {
+    return -1;
+  }
+  else if(readCount == 1)
+  {
+    return 0;
+  }
+  else if(readCount == 2 && (*choiceStr[0] == 'q' || *choiceStr[0] == 'Q') )
+  {
+    return 1;
+  }
+  else
+  {
+    *offset = strtol(*choiceStr, &endptr, 0);
+    if(*choiceStr[0] != '\0' && *endptr == '\n') return 2;
+    else return 3;
+  }
 }
 
 int loadBuffer(unsigned char *buf, struct arguments *arg)

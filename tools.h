@@ -13,10 +13,11 @@ struct arguments
 {
   FILE *src;
   int column_width;
+  size_t filesize;
 };
 
 struct arguments *initArguments(int argc, char *argv[]);
-int choice(char **choiceStr, size_t *choiceStrBufferLength);
+int choice(char **choiceStr, size_t *choiceStrBufferLength, long *offset);
 int loadBuffer(unsigned char *buf, struct arguments *arg);
 void printOutput(unsigned char *buf, struct arguments *arg, size_t *bytes_printed);
 void freeArguments(struct arguments *arg);
