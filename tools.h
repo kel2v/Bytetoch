@@ -8,6 +8,7 @@
 #define DEFAULT_COLUMN_WIDTH 16
 #define MAX_OFFSET_SPACE_WIDTH 20
 #define MAX_CHOICESTR_BUFFER_LENGTH 1024
+#define printerror() fprintf(stderr, "error: %s - %s\n", __func__, strerror(errno))
 
 struct arguments
 {
@@ -16,6 +17,7 @@ struct arguments
   size_t filesize;
 };
 
+void *common_malloc(size_t size);
 struct arguments *initArguments(int argc, char *argv[]);
 int choice(char **choiceStr, size_t *choiceStrBufferLength, long *offset);
 int loadBuffer(unsigned char *buf, struct arguments *arg);

@@ -6,32 +6,49 @@
 #include <stdarg.h>
 #include "tools.h"
 
-
-FILE *init_src(int argc, char *argv[])
+void *common_malloc(size_t size)
 {
-  FILE *src = NULL;
+  void *ptr = malloc(size);
+  if(size != 0 && ptr == NULL)
+  {
+    printerror();
+    return NULL;
+  }
+  return ptr;
+}
+
+
+int init_src(struct arguments *arg, int argc, char *argv[])
+{
   int index;
 
   index = (argc == 2)?1:2;
-  if(access(argv[index], F_OK) != 0 || (src = fopen(argv[index], "rb")) == NULL) return NULL;
-  return src;
+  if(access(argv[index], F_OK) != 0 || (arg->src = fopen(argv[index], "rb")) == NULL)
+  {
+    printerror();
+    return -1;
+  }
+
+  return 0;
 }
 
-size_t init_column_width(int argc, char *argv[])
+int init_column_width(struct arguments *arg, int argc, char *argv[])
 {
-  long column_width;
   char *endptr = NULL;
 
-  column_width = DEFAULT_COLUMN_WIDTH;
+  arg->column_width = DEFAULT_COLUMN_WIDTH;
   if(argc == 3)
   {
-    column_width = strtol(argv[1], &endptr, 10);
-    if( (*argv[1] == '\0' || *endptr != '\0') || (column_width < MIN_COLUMN_WIDTH || column_width > MAX_COLUMN_WIDTH) )
+    arg->column_width = strtol(argv[1], &endptr, 10);
+    if( (*argv[1] == '\0' || *endptr != '\0') || (arg->column_width < MIN_COLUMN_WIDTH || arg->column_width > MAX_COLUMN_WIDTH) )
     {
-      column_width = DEFAULT_COLUMN_WIDTH;
+      fprintf(stderr, "error: init_column_width - invalid column_width modifier value; using default value %d\n", DEFAULT_COLUMN_WIDTH);
+      arg->column_width = DEFAULT_COLUMN_WIDTH;
+      return 1;
     }
   }
-  return column_width;
+
+  return 0;
 }
 
 void init_filesize(struct arguments *arg)
@@ -56,17 +73,21 @@ struct arguments *initArguments(int argc, char *argv[])
 
   if(argc <= 1 || argc > 3)
   {
+    fprintf(stderr, "initArgument - invalid number of arguments\n");
     return NULL;
   }
 
-  if( (arg = malloc(sizeof(struct arguments))) == NULL ) return NULL;
+  if( (arg = common_malloc(sizeof(struct arguments))) == NULL )
+  {
+    return NULL;
+  }
 
-  if((arg->src = init_src(argc, argv)) == NULL)
+  if(init_src(arg, argc, argv) == -1)
   {
     free(arg);
     return NULL;
   }
-  arg->column_width = init_column_width(argc, argv);
+  init_column_width(arg, argc, argv);
   init_filesize(arg);
 
   return arg;
@@ -82,6 +103,7 @@ int choice(char **choiceStr, size_t *choiceStrBufferLength, long *offset)
   readCount = getline(choiceStr, choiceStrBufferLength, stdin);
   if(readCount == -1)
   {
+    printerror();
     return -1;
   }
   else if(readCount == 1)
@@ -96,7 +118,10 @@ int choice(char **choiceStr, size_t *choiceStrBufferLength, long *offset)
   {
     *offset = strtol(*choiceStr, &endptr, 0);
     if(*choiceStr[0] != '\0' && *endptr == '\n') return 2;
-    else return 3;
+    else
+    {
+      return 3;
+    }
   }
 }
 
@@ -112,6 +137,7 @@ int loadBuffer(unsigned char *buf, struct arguments *arg)
   }
   if(ferror(arg->src) != 0)
   {
+    printerror();
     return -1;
   }
 

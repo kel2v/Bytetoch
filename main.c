@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     return EXIT_FAILURE;
   }
 
-  if( ((buf = malloc(arg->column_width+1)) == NULL) && ((choiceStr = malloc(choiceStrBufferLength)) == NULL) )
+  if( ((buf = common_malloc(arg->column_width+1)) == NULL) && ((choiceStr = common_malloc(choiceStrBufferLength)) == NULL) )
   {
     freeArguments(arg);
     return EXIT_FAILURE;
@@ -41,10 +41,13 @@ int main(int argc, char *argv[])
     {
       current_pos = ftell(arg->src);
       bytes_printed = offset - offset%arg->column_width;
-      if( (fseek(arg->src, offset, SEEK_SET) == -1) || (ftell(arg->src) >= arg->filesize) )
+      if(bytes_printed >= arg->filesize)
       {
-        fseek(arg->src, current_pos, SEEK_SET);
         bytes_printed = current_pos;
+        continue;
+      }
+      if(fseek(arg->src, bytes_printed, SEEK_SET) == -1)
+      {
         continue;
       }
     }
