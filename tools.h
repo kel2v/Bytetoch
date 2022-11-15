@@ -4,7 +4,7 @@
 #include <stdio.h>
 
 #define MIN_COLUMN_WIDTH 1
-#define MAX_COLUMN_WIDTH 64
+#define MAX_COLUMN_WIDTH 128
 #define DEFAULT_COLUMN_WIDTH 16
 #define MAX_OFFSET_SPACE_WIDTH 20
 #define MAX_CHOICESTR_BUFFER_LENGTH 1024
@@ -15,6 +15,7 @@ struct arguments
   FILE *src;
   int column_width;
   size_t filesize;
+  int onlytext;
 };
 
 void *common_malloc(size_t size);
