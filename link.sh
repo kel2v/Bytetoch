@@ -1,1 +1,1 @@
-gcc main.o argument.o buffer.o choice.o close.o error.o output.o terminal.o -o bin
+gcc bin/main.o bin/argument.o bin/buffer.o bin/choice.o bin/close.o bin/error.o bin/output.o bin/terminal.o -o bin/binread
