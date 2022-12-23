@@ -4,13 +4,13 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "terminal1.h"
-#include "argument1.h"
-#include "buffer1.h"
-#include "choice1.h"
-#include "output1.h"
-#include "error1.h"
-#include "close1.h"
+#include "terminal.h"
+#include "argument.h"
+#include "buffer.h"
+#include "choice.h"
+#include "output.h"
+#include "error.h"
+#include "close.h"
 
 
 int main(int argc, char *argv[])

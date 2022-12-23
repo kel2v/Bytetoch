@@ -1,7 +1,7 @@
 #ifndef _BUFFER_H_
 #define _BUFFER_H_
 
-#include "argument1.h"
+#include "argument.h"
 
 #define MAX_BUFFERSIZE 128
 

@@ -1,10 +1,10 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "argument1.h"
-#include "buffer1.h"
-#include "output1.h"
-#include "error1.h"
+#include "argument.h"
+#include "buffer.h"
+#include "output.h"
+#include "error.h"
 
 int printOutput(struct argument *arg, buffer *buffername, long currentPOS)
 {

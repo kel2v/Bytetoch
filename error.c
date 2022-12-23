@@ -2,7 +2,7 @@
 #include <string.h>
 #include <errno.h>
 
-#include "error1.h"
+#include "error.h"
 
 void printerror()
 {

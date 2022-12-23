@@ -3,8 +3,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include "argument1.h"
-#include "terminal1.h"
+#include "argument.h"
+#include "terminal.h"
 
 void closeProgram(struct terminal *trml, struct argument *arg, int exit_status)
 {

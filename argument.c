@@ -5,8 +5,8 @@
 #include <errno.h>
 #include <sys/stat.h>
 
-#include "argument1.h"
-#include "error1.h"
+#include "argument.h"
+#include "error.h"
 
 
 /*

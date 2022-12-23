@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "argument1.h"
-#include "buffer1.h"
-#include "error1.h"
+#include "argument.h"
+#include "buffer.h"
+#include "error.h"
 
 void init_buffer(buffer *buffername, int size)
 {

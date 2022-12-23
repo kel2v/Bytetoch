@@ -3,10 +3,10 @@
 #include <string.h>
 #include <errno.h>
 
-#include "terminal1.h"
-#include "argument1.h"
-#include "choice1.h"
-#include "error1.h"
+#include "terminal.h"
+#include "argument.h"
+#include "choice.h"
+#include "error.h"
 
 
 /*

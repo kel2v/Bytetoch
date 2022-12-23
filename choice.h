@@ -1,8 +1,8 @@
 #ifndef _CHOICE_H_
 #define _CHOICE_H_
 
-#include "terminal1.h"
-#include "argument1.h"
+#include "terminal.h"
+#include "argument.h"
 
 #define MAX_INPUTBUFSIZE 64
 

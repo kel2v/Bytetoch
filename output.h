@@ -1,8 +1,8 @@
 #ifndef _OUTPUT_H_
 #define _OUTPUT_H_
 
-#include "argument1.h"
-#include "buffer1.h"
+#include "argument.h"
+#include "buffer.h"
 
 #define MAX_OFFSET_SPACE_WIDTH 20
 

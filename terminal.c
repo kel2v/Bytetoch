@@ -3,8 +3,8 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "terminal1.h"
-#include "error1.h"
+#include "terminal.h"
+#include "error.h"
 
 
 int init_terminal(struct terminal *trml, int fd)
