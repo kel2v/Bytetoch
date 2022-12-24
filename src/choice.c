@@ -41,11 +41,20 @@ int processChoice(struct terminal *trml, struct argument *arg, char choice)
         set_echo(trml, OFF);
         set_canon(trml, OFF);
 
+
         long nextPOS;
         if((nextPOS = stringToNum(string)) == -1)
         {
+            fprintf(stdout, "\033[0F");
+            fprintf(stdout, "\033[0F");
+            fprintf(stdout, "\033[0J");
             return -2;
         }
+
+
+        fprintf(stdout, "\033[0F");
+        fprintf(stdout, "\033[0J");
+
 
         int chStrmPosPtrStatus = chStrmPosPtr(arg, nextPOS);
         if(chStrmPosPtrStatus == 0) return 1;
