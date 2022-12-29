@@ -17,6 +17,7 @@ struct argument
 
 int init_Argument(struct argument *arg, int argc, char *argv[]);
 
+int validateArguments(int argc, char *argv[]);
 int init_src(struct argument *arg, int argc, char *argv[]);
 int init_columnWidth(struct argument *arg, int argc, char *argv[]);
 int init_onlyText(struct argument *arg, int argc, char* argv[]);

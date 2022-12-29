@@ -26,14 +26,14 @@ int main(int argc, char *argv[])
 
     struct argument arg;
     int initArgumentStatus = init_Argument(&arg, argc, argv);
-    if(initArgumentStatus == 1)
-    {
-        printerror();
-    }
-    else if(initArgumentStatus == -1 || initArgumentStatus == -2)
+    if(initArgumentStatus == -1 || initArgumentStatus == -2 || initArgumentStatus == -3)
     {
         printerror();
         closeProgram(&trml, &arg, EXIT_FAILURE);
+    }
+    if(initArgumentStatus == -4)
+    {
+        printerror();
     }
 
 

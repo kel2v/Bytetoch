@@ -11,6 +11,10 @@ void printerror()
     {
         fprintf(stderr, "Error: %s\tInvalid number of arguments\n", originFuncName);
     }
+    else if(errno == EINVALFLAGS)
+    {
+        fprintf(stderr, "Error: %s\tInvalid flags\n", originFuncName);
+    }
     else if(errno == EINVCOLWIDTHMOD)
     {
         fprintf(stderr, "Error: %s\tInvalid value of column_width modifier\n", originFuncName);

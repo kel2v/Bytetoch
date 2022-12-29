@@ -24,10 +24,20 @@ int init_Argument(struct argument *arg, int argc, char *argv[])
 
     arg->srcstream = NULL;
 
-    if(argc <= 1 || argc > 5)
+    int validateArgumentsStatus = validateArguments(argc, argv);
+    if(validateArgumentsStatus == -1)
+    {
+        return -1;
+    }
+    else if(validateArgumentsStatus == -2)
     {
         errno = EINVARGCOUNT;
         return -2;
+    }
+    else if(validateArgumentsStatus == -3)
+    {
+        errno = EINVALFLAGS;
+        return -3;
     }
 
     if(init_src(arg, argc, argv) == -1)
@@ -48,8 +58,45 @@ int init_Argument(struct argument *arg, int argc, char *argv[])
         return -1;
     }
 
-    if(invalidColWidthMod) return 1;
-    else return 0;
+    if(invalidColWidthMod)
+    {
+        return -4;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+
+int validateArguments(int argc, char *argv[])
+{
+    int valid = 0;
+    if(argc <= 1 || argc > 5)
+    {
+        valid =  -2;
+    }
+    else
+    {
+        for(int i=1; i<argc-1; i++)
+        {
+            if(strcmp(argv[i], "-t") == 0)
+            {
+                continue;
+            }
+            else if(strcmp(argv[i], "-c") == 0)
+            {
+                ++i;
+                continue;
+            }
+            else
+            {
+                valid = -3;
+            }
+        }
+    }
+
+    return valid;
 }
 
 
