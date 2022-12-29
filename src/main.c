@@ -75,6 +75,7 @@ int main(int argc, char *argv[])
             continue;
         }
 
+
         long initialOffset = ftell(arg.srcstream);
         int loadBufferStatus = loadBuffer(&outputbuffer, &arg);
         if(loadBufferStatus == -1)

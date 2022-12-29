@@ -22,13 +22,14 @@ int init_Argument(struct argument *arg, int argc, char *argv[])
 {
     strcpy(originFuncName, "init_Argument");
 
+    arg->srcstream = NULL;
+
     if(argc <= 1 || argc > 5)
     {
         errno = EINVARGCOUNT;
         return -2;
     }
 
-    arg->srcstream = NULL;
     if(init_src(arg, argc, argv) == -1)
     {
         return -1;
