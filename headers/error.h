@@ -3,13 +3,13 @@
 
 #define MAX_FUNCNAMELENGTH 64
 
-#define EINVARGCOUNT 1000000
 #define EINVALFLAGS 1000001
 #define EINVCOLWIDTHMOD 1000002
 #define EPOSOUTRANGE 1000003
 #define ESTRNOTPUREINT 1000004
+#define EFLAGSREPEATED 1000005
 
-static char originFuncName[MAX_FUNCNAMELENGTH] = "";
+extern char originFuncName[MAX_FUNCNAMELENGTH];
 
 void printerror();
 

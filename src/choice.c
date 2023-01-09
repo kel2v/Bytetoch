@@ -10,24 +10,17 @@
 #include ERROR_H
 
 
-/*
- *  return -2   -> Error No = EPOSOUTRANGE or ESTRNOTPUREINT, user has requested for for jump to New POS but entered value is Invalid
- *  return -1   -> Error No = |||varies|||, fatal error, occured in a Standard library function
- *  return 0    -> No Error, user has requested for Next set of output
- *  return 1    -> No Error, user has requested to jump to New POS and New POS is initialised
- *  return 2    -> No Error, user has requested for exit of the program
- *  return 3    -> No Error, user has entered Invalid choice
- */
+
 int processChoice(struct terminal *trml, struct argument *arg, char choice)
 {
-    strcpy(originFuncName, "processChoice");
-
     if(choice == ' ' || choice == '\n' || choice == '\r')
     {
         return 0;
     }
     else if(choice == '\033')
     {
+        fprintf(stdout, "\n\n");
+
         set_canon(trml, ON);
         set_echo(trml, ON);
 
@@ -35,31 +28,37 @@ int processChoice(struct terminal *trml, struct argument *arg, char choice)
 
         if(fgets(string, MAX_INPUTBUFSIZE, stdin) == NULL)
         {
+            strcpy(originFuncName, "processChoice");
             return -1;
         }
 
         set_echo(trml, OFF);
         set_canon(trml, OFF);
 
-
         long nextPOS;
-        if((nextPOS = stringToNum(string)) == -1)
+        if((nextPOS = stringToNum(string)) == -2)
         {
-            fprintf(stdout, "\033[0F");
-            fprintf(stdout, "\033[0F");
-            fprintf(stdout, "\033[0J");
+            strcpy(originFuncName, "processChoice");
+            errno = ESTRNOTPUREINT;
             return -2;
         }
 
-
-        fprintf(stdout, "\033[0F");
-        fprintf(stdout, "\033[0J");
-
-
         int chStrmPosPtrStatus = chStrmPosPtr(arg, nextPOS);
-        if(chStrmPosPtrStatus == 0) return 1;
-        else if(chStrmPosPtrStatus == -1) return -1;
-        else if(chStrmPosPtrStatus == -2) return -2;
+        if(chStrmPosPtrStatus == 0)
+        {
+            return 1;
+        }
+        else if(chStrmPosPtrStatus == -1)
+        {
+            strcpy(originFuncName, "processChoice");
+            return -1;
+        }
+        else if(chStrmPosPtrStatus == -2)
+        {
+            strcpy(originFuncName, "processChoice");
+            errno = EPOSOUTRANGE;
+            return -3;
+        }
     }
     else if(choice == 'q' || choice == 'Q' || choice == EOF)
     {
@@ -78,8 +77,7 @@ long stringToNum(char *string)
     long result = strtol(string, &endptr, 0);
     if(!((*string != '\0' || *string != '\n' || *string != '\r') && (*endptr == '\0' || *endptr == '\n' || *endptr == '\r')))
     {
-        errno = ESTRNOTPUREINT;
-        return -1;
+        return -2;
     }
 
     return result;
@@ -90,7 +88,6 @@ int chStrmPosPtr(struct argument *arg, long nextPOS)
 {
     if(nextPOS < arg->filesize)
     {
-        int initialPOS = ftell(arg->srcstream);
         nextPOS = nextPOS - nextPOS%arg->column_width;
 
         if(fseek(arg->srcstream, nextPOS, SEEK_SET) == -1)
@@ -102,7 +99,6 @@ int chStrmPosPtr(struct argument *arg, long nextPOS)
     }
     else
     {
-        errno = EPOSOUTRANGE;
         return -2;
     }
 }

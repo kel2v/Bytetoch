@@ -7,7 +7,6 @@
 #include "../headers/headers.h"
 #include TERMINAL_H
 #include ARGUMENT_H
-#include BUFFER_H
 #include CHOICE_H
 #include OUTPUT_H
 #include ERROR_H
@@ -17,7 +16,7 @@
 int main(int argc, char *argv[])
 {
     struct terminal trml;
-    if(init_terminal(&trml, STDIN_FILENO) == -1)
+    if(init_terminal(&trml, STDIN_FILENO) == -1)  //has doubt with 'fd' associated with terminal and program's stdin
     {
         printerror();
         return EXIT_FAILURE;
@@ -26,19 +25,21 @@ int main(int argc, char *argv[])
 
     struct argument arg;
     int initArgumentStatus = init_Argument(&arg, argc, argv);
+
+
     if(initArgumentStatus == -1 || initArgumentStatus == -2 || initArgumentStatus == -3)
     {
         printerror();
         closeProgram(&trml, &arg, EXIT_FAILURE);
     }
-    if(initArgumentStatus == -4)
+    else if(initArgumentStatus == -4)
     {
         printerror();
     }
 
 
-    buffer outputbuffer;
-    init_buffer(&outputbuffer, arg.column_width);
+    struct output outputParam;
+    init_Output(&outputParam, &arg);
 
 
     if(set_canon(&trml, OFF) == -1 || set_echo(&trml, OFF) == -1)
@@ -48,16 +49,20 @@ int main(int argc, char *argv[])
     }
 
 
-    int dontStop = 1;
+    int dontStop = 1, lastBuffer = 0;
     while(dontStop)
     {
         char choice = fgetc(stdin);
 
-
         int processChoiceStatus = processChoice(&trml, &arg, choice);
-        if(processChoiceStatus == 2)
+        if(processChoiceStatus == 1)
         {
-            dontStop = 0;
+            printf("\n");
+            lastBuffer = 0;
+            resetOutputBuffer(&outputParam);
+        }
+        else if(processChoiceStatus == 2)
+        {
             break;
         }
         else if(processChoiceStatus == 3)
@@ -69,27 +74,44 @@ int main(int argc, char *argv[])
             printerror();
             closeProgram(&trml, &arg, EXIT_FAILURE);
         }
-        else if(processChoiceStatus == -2)
+        else if(processChoiceStatus == -2 || processChoiceStatus == -3)
         {
             printerror();
+            printf("\n\n");
             continue;
         }
 
 
-        long initialOffset = ftell(arg.srcstream);
-        int loadBufferStatus = loadBuffer(&outputbuffer, &arg);
-        if(loadBufferStatus == -1)
+        /*
+            0 && 0 (0):-> not last buffer and buffer is not short
+            0 && 1 (1):-> not last buffer and buffer is short
+            1 && 0 (0):-> last buffer and buffer is not short
+            1 && 1 (0):-> last buffer and buffer is short
+        */
+        if(!lastBuffer && isShortage(&outputParam))
         {
-            printerror();
-            closeProgram(&trml, &arg, EXIT_FAILURE);
-        }
-        else if(loadBufferStatus != outputbuffer.buffersize)
-        {
-            dontStop = 0;
+            int loadBufferStatus = loadOutputBuffer(&outputParam, &arg);
+            if(loadBufferStatus == -1)
+            {
+                printerror();
+                closeProgram(&trml, &arg, EXIT_FAILURE);
+            }
         }
 
 
-        if(printOutput(&arg, &outputbuffer, initialOffset) < 0)
+        if(feof(arg.srcstream) != 0)
+        {
+            lastBuffer = 1;
+
+            if(isShortage(&outputParam))
+            {
+                reinit_outputColWidth(&outputParam);
+                dontStop = 0;
+            }
+        }
+
+
+        if(printOutput(&outputParam, &arg) < 0)
         {
             printerror();
             closeProgram(&trml, &arg, EXIT_FAILURE);

@@ -10,112 +10,134 @@
 #include ERROR_H
 
 
-/*
- *  int init_Argument(struct argument *arg, int argc, char *argv[]);
- *
- *  return -2   -> Error No = EINVARGCOUNT, fatal error, Invalid number of arguments
- *  return -1   -> Error No = |||varies|||, fatal error, occured in a Standard library function
- *  return 1    -> Error No = EINVCOLWIDTHMOD, non-fatal error, Invalid value of column_width modifier
- *  return 0    -> NO ERROR
- */
 int init_Argument(struct argument *arg, int argc, char *argv[])
 {
-    strcpy(originFuncName, "init_Argument");
-
     arg->srcstream = NULL;
 
     int validateArgumentsStatus = validateArguments(argc, argv);
-    if(validateArgumentsStatus == -1)
+    if(validateArgumentsStatus == -2)
     {
-        return -1;
-    }
-    else if(validateArgumentsStatus == -2)
-    {
-        errno = EINVARGCOUNT;
+        strcpy(originFuncName, "init_Argument");
+        errno = EINVALFLAGS;
         return -2;
     }
     else if(validateArgumentsStatus == -3)
     {
-        errno = EINVALFLAGS;
+        strcpy(originFuncName, "init_Argument");
+        errno = EFLAGSREPEATED;
         return -3;
     }
 
     if(init_src(arg, argc, argv) == -1)
     {
+        strcpy(originFuncName, "init_Argument");
         return -1;
     }
 
-    int invalidColWidthMod = 0;
-    if(init_columnWidth(arg, argc, argv) == -2)
+    if(init_fileSize(arg) == -1)
     {
-        invalidColWidthMod = 1;
+        strcpy(originFuncName, "init_Argument");
+        return -1;
     }
 
     init_onlyText(arg, argc, argv);
 
-    if(init_fileSize(arg) == -1)
+    if(init_columnWidth(arg, argc, argv) == -2)
     {
-        return -1;
-    }
-
-    if(invalidColWidthMod)
-    {
+        strcpy(originFuncName, "init_Argument");
+        errno = EINVCOLWIDTHMOD;
         return -4;
     }
-    else
-    {
-        return 0;
-    }
+
+    return 0;
 }
 
 
 int validateArguments(int argc, char *argv[])
 {
-    int valid = 0;
-    if(argc <= 1 || argc > 5)
+    int tpresent = 0, cpresent = 0;
+    for(int i=1; i<argc-1; i++)
     {
-        valid =  -2;
-    }
-    else
-    {
-        for(int i=1; i<argc-1; i++)
+        if(strcmp(argv[i], "-t") == 0)
         {
-            if(strcmp(argv[i], "-t") == 0)
+            if(tpresent)
             {
-                continue;
+                return -3;
             }
-            else if(strcmp(argv[i], "-c") == 0)
+
+            tpresent = 1;
+        }
+        else if(strcmp(argv[i], "-c") == 0)
+        {
+            if(tpresent)
             {
-                ++i;
-                continue;
+                return -3;
             }
-            else
-            {
-                valid = -3;
-            }
+
+            ++i;
+            cpresent = 1;
+        }
+        else
+        {
+            return -2;
         }
     }
 
-    return valid;
-}
-
-
-
-int init_src(struct argument *arg, int argc, char *argv[])
-{
-    if(access(argv[argc-1], F_OK) != 0 || (arg->srcstream = fopen(argv[argc-1], "rb")) == NULL) return -1;
     return 0;
 }
 
 
-/*
- *  int init_columnWidth(struct argument *arg, int argc, char *argv[])
- *
- *  return -2   -> Error No = EINVCOLWIDTHMOD, Indicates that argc is greater than 2 and "-c" is detected but "Invalid value of column_width modifier"
- *  return 1    -> No Error, Indicates that argc is greater than 2 and "-c" is detected and new column_width is successfully set.
- *  return 2    -> No Error, Indicates that argc is greater than 2 but "-c" flag is not detected in arguments
- *  return 0    -> No Error, Indicates that argc is not greater than 2 and hence column_width is assigned with DEFAULT_COLWIDTH
- */
+int init_src(struct argument *arg, int argc, char *argv[])
+{
+    if(access(argv[argc-1], F_OK) != 0 || (arg->srcstream = fopen(argv[argc-1], "rb")) == NULL)
+    {
+        return -1;
+    }
+
+    return 0;
+}
+
+
+int init_fileSize(struct argument *arg)
+{
+    int fd;
+    if((fd = fileno(arg->srcstream)) == -1)
+    {
+        return -1;
+    }
+
+    struct stat st;
+    if(fstat(fd, &st) == -1)
+    {
+        return -1;
+    }
+
+    arg->filesize = st.st_size;
+
+    return 0;
+}
+
+
+int init_onlyText(struct argument *arg, int argc, char *argv[])
+{
+    arg->onlytext = 0;
+
+    if(argc >= 3)
+    {
+      for(int i=1; i<argc-1; i++)
+      {
+        if(strcmp(argv[i], "-t") == 0)
+        {
+            arg->onlytext = 1;
+            return 1;
+        }
+      }
+    }
+
+    return 0;
+}
+
+
 int init_columnWidth(struct argument *arg, int argc, char *argv[])
 {
     arg->column_width = DEFAULT_COLWIDTH;
@@ -146,49 +168,7 @@ int init_columnWidth(struct argument *arg, int argc, char *argv[])
             arg->column_width = newColWidthVal;
             return 1;
         }
-        else
-        {
-            return 2;
-        }
     }
-
-    return 0;
-}
-
-int init_onlyText(struct argument *arg, int argc, char *argv[])
-{
-    arg->onlytext = 0;
-
-    if(argc >= 3)
-    {
-      for(int i=1; i<argc-1; i++)
-      {
-        if(strcmp(argv[i], "-t") == 0)
-        {
-            arg->onlytext = 1;
-            return 1;
-        }
-      }
-    }
-
-    return 0;
-}
-
-int init_fileSize(struct argument *arg)
-{
-    int fd;
-    if((fd = fileno(arg->srcstream)) == -1)
-    {
-        return -1;
-    }
-
-    struct stat st;
-    if(fstat(fd, &st) == -1)
-    {
-        return -1;
-    }
-
-    arg->filesize = st.st_size;
 
     return 0;
 }

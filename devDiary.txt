@@ -1,0 +1,8 @@
+dairy number: 1
+
+1. Now repeated arguments are detected, an error is shown, and program is terminated.
+2. From now, Options (commandline flags) are not validated based on number of arguments passed.
+3. Note: don't press arrow keys (and some other keys which generate ESC) for scrolling as pressing such keys generate 'ESC' as input and program starts expecting for "new offset value".
+4. Now the string entered as "new offset value" (after pressing ESC) is not erased. At stdout, if the entered "new offset" is valid, the output begins after a 'single' line gap and if it invalid, then output begins after 'two' lines gap.
+5. Now the new (and more meaningful) concept of "Buffer" will be replacing the old "buffer" (struct), in which MAX_BUFFERSIZE number of bytes is loaded to a unsigned char array and this is utilised for printing output till shortage occurs.
+6. Now unprintable characters are represented by '.' (dot), instead of previously used ' ' (space).
